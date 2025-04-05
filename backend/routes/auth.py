@@ -15,10 +15,14 @@ def register(user_data: user_schema.UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login")
 def login(credentials: user_schema.UserLogin, db: Session = Depends(get_db)):
-    token = auth_service.authenticate_user(credentials, db)
-    if not token:
+    auth_data = auth_service.authenticate_user(credentials, db)
+    if not auth_data:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciais inválidas"
         )
-    return {"access_token": token, "token_type": "bearer"}
+    return {
+        "success": True,
+        "status_code": 200,
+        "data": auth_data
+    }

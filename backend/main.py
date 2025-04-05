@@ -7,11 +7,36 @@ import json
 from .database import Base, engine
 from .routes import auth, cep, user, billing  
 
-# === Inicializa a aplicação ===
 app = FastAPI(
     title="Consulta de CEP",
-    description="API com autenticação, cobrança por consulta e gerenciamento de usuários",
-    version="1.0.0"
+    description=(
+        "API com autenticação, cobrança por consulta e gerenciamento de usuários.\n\n"
+        "Esta aplicação consome a API pública do [ViaCEP](https://viacep.com.br), "
+        "conforme seus termos de uso disponíveis em https://viacep.com.br.\n\n"
+        "Todos os dados de CEPs são obtidos da fonte pública e gratuita disponibilizada por eles.\n\n"
+        "Esta API é apenas uma interface intermediária com controle de acesso, "
+        "cobrança por consulta e estatísticas, não substituindo ou representando a ViaCEP oficialmente."
+    ),
+    version="1.0.0",
+    contact={
+        "name": "Patrick Soares de Oliveira",
+        "url": "https://www.linkedin.com/in/patricksoares-dev/",
+        "email": "patrickoliveiramoto@gmail.com",
+    },
+    license_info={
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+    openapi_tags=[
+        {
+            "name": "Referência externa",
+            "description": "Baseado na API pública do ViaCEP",
+            "externalDocs": {
+                "description": "Documentação oficial da API ViaCEP",
+                "url": "https://viacep.com.br"
+            }
+        }
+    ]
 )
 
 # === Cria as tabelas no banco ===
@@ -20,7 +45,7 @@ Base.metadata.create_all(bind=engine)
 # === CORS (libera front-end para acessar) ===
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["http://localhost:8080"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,7 +60,7 @@ class StandardizeResponseMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
 
         if response.status_code < 400 and "application/json" in response.headers.get("content-type", ""):
-            # Lê o corpo da resposta original
+
             body = b""
             async for chunk in response.body_iterator:
                 body += chunk
@@ -61,7 +86,6 @@ class StandardizeResponseMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(StandardizeResponseMiddleware)
 
-# === Registra as rotas ===
 app.include_router(auth.router)
 app.include_router(cep.router)
 app.include_router(user.router)

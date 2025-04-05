@@ -42,8 +42,13 @@ def create_user(user_data: UserCreate, db: Session) -> User:
     return user
 
 
-def authenticate_user(credentials: UserLogin, db: Session) -> str | None:
+def authenticate_user(credentials: UserLogin, db: Session) -> dict | None:
     user = db.query(User).filter(User.email == credentials.email).first()
     if not user or not verify_password(credentials.password, user.hashed_password):
         return None
-    return create_access_token({"sub": str(user.id)})
+    token = create_access_token({"sub": str(user.id)})
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "full_name": user.full_name
+    }

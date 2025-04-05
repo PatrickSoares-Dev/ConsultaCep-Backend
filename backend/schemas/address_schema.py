@@ -6,16 +6,17 @@ from datetime import datetime
 class CepRequest(BaseModel):
     cep: str
 
-
 class AddressResponse(BaseModel):
     id: int
     cep: str
-    logradouro: Optional[str]
-    complemento: Optional[str]
-    bairro: Optional[str]
-    localidade: Optional[str]
-    uf: Optional[str]
+    logradouro: str | None
+    complemento: str | None
+    bairro: str | None
+    localidade: str | None
+    uf: str | None
     data_consulta: datetime
+    credito_utilizado: float 
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+

@@ -14,18 +14,19 @@ def buscar_cep(cep: str, db: Session, user: User) -> Address | None:
         return None
 
     data = response.json()
-    cep_formatado = data.get("cep") 
+    cep_formatado = data.get("cep")
 
     existente = db.query(Address).filter(Address.cep == cep_formatado, Address.user_id == user.id).first()
     if existente:
         return existente
 
+    valor_credito = 0.02
     credito = billing_service.get_credito(db, user)
-    if credito.saldo < 0.02:
+    if credito.saldo < valor_credito:
         raise HTTPException(status_code=402, detail="Créditos insuficientes para consulta")
-    
-    credito.saldo -= 0.02
-    credito.total_usado += 0.02
+
+    credito.saldo -= valor_credito
+    credito.total_usado += valor_credito
     credito.total_consultas += 1
 
     address = Address(
@@ -35,7 +36,8 @@ def buscar_cep(cep: str, db: Session, user: User) -> Address | None:
         bairro=data.get("bairro"),
         localidade=data.get("localidade"),
         uf=data.get("uf"),
-        user_id=user.id
+        user_id=user.id,
+        credito_utilizado=valor_credito
     )
 
     db.add(address)
